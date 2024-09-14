@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Slider with Blur Transition</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .slider-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+            overflow: hidden;
+            max-width: 90vw;
+            /* Ensure the slider does not extend beyond the viewport */
+        }
+
+        .slider {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 20px;
+            padding-left: 5%;
+            padding-right: 5%;
+            -ms-overflow-style: none;
+            /* Hide scrollbar for IE and Edge */
+            scrollbar-width: none;
+            /* Hide scrollbar for Firefox */
+            scroll-behavior: smooth;
+            max-width: 90vw;
+            background-color: black;
+            border-radius: 16px;
+        }
+
+        .slider::-webkit-scrollbar {
+            display: none;
+            /* Hide scrollbar for Chrome, Safari, and Opera */
+        }
+
+        .card {
+            flex: 0 0 50%;
+            max-width: 60%;
+            scroll-snap-align: center;
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: filter 0.3s ease, transform 0.3s ease;
+            margin: 5% 0;
+        }
+
+        .blur {
+            filter: blur(1px);
+            /* Blur effect for non-centered cards */
+            transform: scale(0.9);
+            /* Optional: slightly shrink blurred cards */
+        }
+
+        .card img {
+            width: 100%;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .card h3 {
+            margin-top: 15px;
+            font-size: 1.2rem;
+        }
+
+        .card p {
+            font-size: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="slider-container">
+        <div class="slider">
+            <!-- dynamically add cards -->
+        </div>
+    </div>
+
+    <script>
+        const slider = document.querySelector('.slider');
+        const cards = document.querySelectorAll('.card');
+
+        const card_list = [
+            { 'src': 'https://via.placeholder.com/300', 'title': 'Card Title 1', 'description': 'Card description 1' },
+            { 'src': 'https://via.placeholder.com/300', 'title': 'Card Title 2', 'description': 'Card description 2' },
+            { 'src': 'https://via.placeholder.com/300', 'title': 'Card Title 3', 'description': 'Card description 3' },
+        ]
+
+        function applyBlur() {
+            // Get the center position of the viewport
+            const center = slider.scrollLeft + slider.clientWidth / 2;
+
+            cards.forEach(card => {
+                const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+
+                // If the card's center is close to the viewport's center, remove blur
+                if (Math.abs(center - cardCenter) < card.offsetWidth / 2) {
+                    card.classList.remove('blur');
+                } else {
+                    card.classList.add('blur');
+                }
+            });
+        }
+
+        function createCard(position) {
+            let card_1, card_2, card_3;
+
+            card_list.forEach((individual_Card, index) => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+
+                const img = document.createElement('img');
+                img.src = individual_Card.src;
+                img.alt = `Image`;
+
+                const h3 = document.createElement('h3');
+                h3.textContent = individual_Card.title;
+
+                const p = document.createElement('p');
+                p.textContent = individual_Card.description;
+
+                card.appendChild(img);
+                card.appendChild(h3);
+                card.appendChild(p);
+
+                if (index === 0) {
+                    card_1 = card;
+                } else if (index === 1) {
+                    card_2 = card;
+                } else {
+                    card_3 = card;
+                }
+            });
+
+            if (position === 'end') {
+                // Add new cards at end
+                slider.appendChild(card_1);
+                slider.appendChild(card_2);
+                slider.appendChild(card_3);
+
+                // Remove cards at start if more than 10 cards
+                if (slider.childElementCount > 10) {
+                    slider.removeChild(slider.firstChild);
+                    slider.removeChild(slider.firstChild);
+                    slider.removeChild(slider.firstChild);
+                }
+            } else if (position === 'start') {
+                const currentScrollPosition = slider.scrollLeft;
+
+                // Insert new cards at the start
+                slider.insertBefore(card_3, slider.firstChild);
+                slider.insertBefore(card_2, slider.firstChild);
+                slider.insertBefore(card_1, slider.firstChild);
+
+                // Remove cards at end if more than 10 cards
+                if (slider.childElementCount > 10) {
+                    slider.removeChild(slider.lastChild);
+                    slider.removeChild(slider.lastChild);
+                    slider.removeChild(slider.lastChild);
+                }
+
+                // Adjust the scroll position by the width of three cards
+                const cardWidth = card_1.offsetWidth;
+                slider.scrollLeft = currentScrollPosition + (cardWidth * 3);
+            }
+
+            applyBlur();
+        }
+
+        document.addEventListener("DOMContentLoaded", (event) => {
+            createCard('end');
+            createCard('end');
+            slider.scrollLeft = 3 * slider.querySelector('.card').offsetWidth; // Shift to the right by two cards
+        });
+
+        slider.addEventListener('scroll', () => {
+            const scrollLeft = slider.scrollLeft;
+            const totalScrollWidth = slider.scrollWidth;
+            const singleCardWidth = slider.querySelector('.card').offsetWidth;
+
+            if (scrollLeft + slider.clientWidth >= totalScrollWidth - singleCardWidth) {
+                createCard('end');  // Add new cards when scrolling near the end
+            }
+
+            if (scrollLeft <= singleCardWidth) {
+                createCard('start');  // Add new cards when scrolling near the start
+            }
+
+            applyBlur();
+        });
+
+    </script>
+</body>
+
+</html>
